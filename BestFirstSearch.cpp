@@ -52,7 +52,7 @@ double optimistically_predict_bound(double n, double profits[], double weights[]
     //loop through items until bag is ~full
     while( (i <= n) && (curr_C + weights[i] <= C)) { //add items
           curr_C += weights[i];
-          bound = bound + p[i];
+          bound = bound + profits[i];
           i++;
     }
 
@@ -67,17 +67,17 @@ double optimistically_predict_bound(double n, double profits[], double weights[]
 }
 
 //knapsack_01_BeFS finds the optimal solution and prints the appropriate information to the output file
-void knapsack_01_BeFS(double n, double profits[], double weights[], double maxprofit, double C, string fileName){
+void knapsack_01_BeFS(double n, double profits[], double weights[], double C, string fileName){
 
     //what we'll print (except for the items themselves)
-    int max_profit = 0;
+    int maxprofit = 0;
     int sol_size = 0;
     int numNodes = 1;
     int numLeaves = 0;
 
     priority_queue<Node> BeFS_Q;
 
-    Nodes current, next;
+    Node current, next;
 
     // current starts as the root.
     current.level = 0;
@@ -89,8 +89,8 @@ void knapsack_01_BeFS(double n, double profits[], double weights[], double maxpr
     next.curr_solution.resize(n+1,0);
 
     //finish initializing root and place into Q
-    current.bound = optimistically_predict_bound(n, profits, weights, current, C);
-    BeFS_Q.push(v);
+    current.opt_profit  = optimistically_predict_bound(n, profits, weights, current, C);
+    BeFS_Q.push(current);
 
     //Start moving through state space! Deque the most promising nodes while there are nodes in the q.
     while(!BeFS_Q.empty()){
@@ -107,8 +107,9 @@ void knapsack_01_BeFS(double n, double profits[], double weights[], double maxpr
             next.level = current.level + 1;
 
             //try node that takes next item
-            next.weight = current.weight + weights[next.level-1];
-            next.profit = current.profit + profits[neXt.level-1];
+	    int index = next.level -1;
+            next.weight = current.weight + weights[index];
+            next.profit = current.profit + profits[index];
 
             //optimal solution will be the same except you set choosen item to 1
             next.curr_solution = current.curr_solution;
@@ -121,7 +122,7 @@ void knapsack_01_BeFS(double n, double profits[], double weights[], double maxpr
             }
 
             //find the upper bound of current node and place in q if necessary.
-            next.opt_profit = optimistically_predict_bound(n, profit, weights, C, next);
+            next.opt_profit = optimistically_predict_bound(n, profits, weights, next, C);
 
             if(next.opt_profit > maxprofit  && next.weight < C) {
                 BeFS_Q.push(next);
@@ -133,12 +134,12 @@ void knapsack_01_BeFS(double n, double profits[], double weights[], double maxpr
             //Try the same thing but without taking the next item
             next.weight = current.weight;
             next.profit = current.profit;
-            next.curr_solution.at(u.level - 1) = 0;
-            next.opt_profit = optimistically_predict_bound(n, profits, weights, C, next);
+            next.curr_solution.at(next.level - 1) = 0;
+            next.opt_profit = optimistically_predict_bound(n, profits, weights, next, C);
 
 
             if(next.opt_profit > maxprofit  && next.weight < C) {
-                BeFS_Q.push(u);
+                BeFS_Q.push(next);
             }
             else numLeaves++;
 
@@ -154,7 +155,7 @@ void knapsack_01_BeFS(double n, double profits[], double weights[], double maxpr
       if(OptSol[i] == 1) sol_size++;
     }
 
-    outFile << n << "," << max_profit << ","<< sol_size << endl;
+    outFile << n << "," << maxprofit << ","<< sol_size << endl;
 
     outFile << numNodes << "," << numLeaves << endl;
 
@@ -166,63 +167,48 @@ void knapsack_01_BeFS(double n, double profits[], double weights[], double maxpr
 int main(int argc, const char * argv[]) {
 
     //declare necessary variables
-    int n = 0;
-    int C;
+    double n = 0;
+    double C;
 
-    //open file for reading
+    //open file for reading, parse first line
     ifstream infile (argv[1]);
-    string line;
-    string buf;
+    string splitMe;
 
+    infile >> splitMe;
 
-    //parse first line
-    if (getline(infile, line)) {
-        stringstream s (line);
-        if (getline(s, buf, ',')) {
-            stringstream ss (buf);
-            ss >> n;
-        }
-        if (getline(s, buf, ',')) {
-            stringstream ss (buf);
-            ss >> C;
-        }
-    }
+    size_t split = splitMe.find(",");
+    
+    n = stod(splitMe.substr(0, split));
+    C = stod(splitMe.substr(split+1));
 
     //initialize arrays
-    int profits[n];
-    int weights[n];
+    double profits[n];
+    double weights[n];
 
-    int count = 0;
-    while (getline (infile, line)) {
-        stringstream s (line);
-        if (getline(s,buf, ',')) {
-            stringstream ss (buf);
-            ss >> in;
-            weights[count] = in;
-        }
-        if (getline(s, buf, ',')) {
-            int in;
-            stringstream ss (buf);
-            ss >> in;
-            profits[count] = in;
-        }
-        count ++;
+    //parse lines 1-n+1
+    for(int i = 0;i < n; i++){
+
+    	infile >> splitMe;
+	split = splitMe.find(",");
+
+	weights[i] = stod(splitMe.substr(0, split));
+        profits[i] = stod(splitMe.substr(split+1));
     }
 
   //bubble sort for sorting because I was told it won't be graded
 	for (int i=0; i < profits.size() - 1; i++){
 		for (int j=0; j< profits.size()-1-i; j++){
-			if (profits[j]/weight[j] < profits[j+1]/weights[j+1]){
+			if (profits[j]/weights[j] < profits[j+1]/weights[j+1]){
 				double  prof_temp = profits[j];
         double weigh_temp = weights[j];
 				profits[j] = profits[j+1];
-        weights[j] = weights[j+1]
+        weights[j] = weights[j+1];
 				profits[j+1] = prof_temp;
         weights[j+1] =weigh_temp;
 			}
 		}
 	}
 
-    output = argv[2];
-    knapsack_01_BeFS(n, pSorted, wSorted, C, output);
+    string output = argv[2];
+    knapsack_01_BeFS(n, profits, weights, C, output);
 }
