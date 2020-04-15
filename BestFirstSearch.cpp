@@ -11,7 +11,7 @@ using namespace std;
 //Items have weights and profits. They also have a cost/benifit ratio which will be used to calculate optimal profits of a node, and which will be used for sorting items.
 struct item
 {
-	double wieght, profit, c_b_ratio;
+	double weight, profit, c_b_ratio;
 };
 
 //or another way...we use arrays to identify weight, profitm c_b_ratio. I think I'll go with this one. Will choose based on ease of implementation
@@ -41,25 +41,25 @@ double optimistically_predict_bound(double n, double profits[], double weights[]
     double bound = nd.profit;
 
     //the level indicates how many nodes we have already used
-    double i = nd.level;
+    int i = nd.level;
 
     //infeasible Node
     if(nd.weight >= C) return -1;
 
-    //capacity includes wieght of Node
+    //capacity includes weight of Node
     double curr_C = nd.weight;
 
     //loop through items until bag is ~full
     while( (i <= n) && (curr_C + weights[i] <= C)) { //add items
-          curr_C += weights[j];
-          bound = bound + p[j];
+          curr_C += weights[i];
+          bound = bound + p[i];
           i++;
     }
 
     //if there are items left and room in the bag, we take a fraction of the next item(we know the whole item can't fit due to the previous loop)
     if((i < n) && (curr_C != C) ) {
         double fractional_space = C - curr_C;
-        bound +=  fractional_space * profits[i]/wieghts[i];
+        bound +=  fractional_space * profits[i]/weights[i];
         return bound;
     }
 
@@ -67,7 +67,7 @@ double optimistically_predict_bound(double n, double profits[], double weights[]
 }
 
 //knapsack_01_BeFS finds the optimal solution and prints the appropriate information to the output file
-void knapsack_01_BeFS(double n, double profits[], double wieghts[], double maxprofit, double C, string fileName){
+void knapsack_01_BeFS(double n, double profits[], double weights[], double maxprofit, double C, string fileName){
 
     //what we'll print (except for the items themselves)
     int max_profit = 0;
@@ -89,7 +89,7 @@ void knapsack_01_BeFS(double n, double profits[], double wieghts[], double maxpr
     next.curr_solution.resize(n+1,0);
 
     //finish initializing root and place into Q
-    current.bound = optimistically_predict_bound(n, profits, wieghts, current, C);
+    current.bound = optimistically_predict_bound(n, profits, weights, current, C);
     BeFS_Q.push(v);
 
     //Start moving through state space! Deque the most promising nodes while there are nodes in the q.
@@ -107,7 +107,7 @@ void knapsack_01_BeFS(double n, double profits[], double wieghts[], double maxpr
             next.level = current.level + 1;
 
             //try node that takes next item
-            next.weight = current.weight + wieghts[next.level-1];
+            next.weight = current.weight + weights[next.level-1];
             next.profit = current.profit + profits[neXt.level-1];
 
             //optimal solution will be the same except you set choosen item to 1
@@ -190,7 +190,7 @@ int main(int argc, const char * argv[]) {
 
     //initialize arrays
     int profits[n];
-    int wieghts[n];
+    int weights[n];
 
     int count = 0;
     while (getline (infile, line)) {
@@ -198,7 +198,7 @@ int main(int argc, const char * argv[]) {
         if (getline(s,buf, ',')) {
             stringstream ss (buf);
             ss >> in;
-            wieghts[count] = in;
+            weights[count] = in;
         }
         if (getline(s, buf, ',')) {
             int in;
@@ -216,9 +216,9 @@ int main(int argc, const char * argv[]) {
 				double  prof_temp = profits[j];
         double weigh_temp = weights[j];
 				profits[j] = profits[j+1];
-        wieghts[j] = wieghts[j+1]
+        weights[j] = weights[j+1]
 				profits[j+1] = prof_temp;
-        weights[j+1] =wiegh_temp;
+        weights[j+1] =weigh_temp;
 			}
 		}
 	}
