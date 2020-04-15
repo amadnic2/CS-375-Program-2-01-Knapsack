@@ -1,4 +1,4 @@
-#include <fstream>
+int#include <fstream>
 #include <algorithm>
 #include <vector>
 #include <queue>
@@ -11,7 +11,7 @@ using namespace std;
 //Items have weights and profits. They also have a cost/benifit ratio which will be used to calculate optimal profits of a node, and which will be used for sorting items.
 struct item
 {
-	double weight, profit, c_b_ratio;
+	int weight, profit, c_b_ratio;
 };
 
 //or another way...we use arrays to identify weight, profitm c_b_ratio. I think I'll go with this one. Will choose based on ease of implementation
@@ -19,12 +19,12 @@ struct item
 //Nodes contain the current amount of weight & profit they contain, their level in the space state tree, their optimal predicted profit, and a vector which will store the current solution in binary. We also use a comparator so the priority queue can properly arrange Nodes.
 struct Node
 {
-  double weight;
-	double profit;
-  double level;
-	double opt_profit;
+  int weight;
+	int profit;
+  int level;
+	int opt_profit;
 
-	vector<double> curr_solution;
+	vector<int> curr_solution;
 
   bool operator<(const Node &comp) const{
         return (opt_profit < comp.opt_profit);
@@ -32,13 +32,13 @@ struct Node
 };
 
 //Define global vector for optimal solution
-vector<double> OptSol;
+vector<int> OptSol;
 
 //We calculate the bound of a node. If a node is infeasible, we set its bound to -1. Else we calulate the bound using the greedy fractional knapsack method, to ensure an optimistic upper-bound.
-double optimistically_predict_bound(double n, double profits[], double weights[], Node nd, double C) {
+int optimistically_predict_bound(int n, int profits[], int weights[], Node nd, int C) {
 
     //bound includes profit of node
-    double bound = nd.profit;
+    int bound = nd.profit;
 
     //the level indicates how many nodes we have already used
     int i = nd.level;
@@ -47,7 +47,7 @@ double optimistically_predict_bound(double n, double profits[], double weights[]
     if(nd.weight >= C) return -1;
 
     //capacity includes weight of Node
-    double curr_C = nd.weight;
+    int curr_C = nd.weight;
 
     //loop through items until bag is ~full
     while( (i <= n) && (curr_C + weights[i] <= C)) { //add items
@@ -58,7 +58,7 @@ double optimistically_predict_bound(double n, double profits[], double weights[]
 
     //if there are items left and room in the bag, we take a fraction of the next item(we know the whole item can't fit due to the previous loop)
     if((i < n) && (curr_C != C) ) {
-        double fractional_space = C - curr_C;
+        int fractional_space = C - curr_C;
         bound +=  fractional_space * profits[i]/weights[i];
         return bound;
     }
@@ -67,7 +67,7 @@ double optimistically_predict_bound(double n, double profits[], double weights[]
 }
 
 //knapsack_01_BeFS finds the optimal solution and prints the appropriate information to the output file
-void knapsack_01_BeFS(double n, double profits[], double weights[], double C, string fileName){
+void knapsack_01_BeFS(int n, int profits[], int weights[], int C, string fileName){
 
     //what we'll print (except for the items themselves)
     int maxprofit = 0;
@@ -167,8 +167,8 @@ void knapsack_01_BeFS(double n, double profits[], double weights[], double C, st
 int main(int argc, const char * argv[]) {
 
     //declare necessary variables
-    double n = 0;
-    double C;
+    int n = 0;
+    int C;
 
     //open file for reading, parse first line
     ifstream infile (argv[1]);
@@ -177,13 +177,13 @@ int main(int argc, const char * argv[]) {
     infile >> splitMe;
 
     size_t split = splitMe.find(",");
-    
-    n = stod(splitMe.substr(0, split));
-    C = stod(splitMe.substr(split+1));
+
+    n = stoi(splitMe.substr(0, split));
+    C = stoi(splitMe.substr(split+1));
 
     //initialize arrays
-    double profits[n];
-    double weights[n];
+    int profits[n];
+    int weights[n];
 
     //parse lines 1-n+1
     for(int i = 0;i < n; i++){
@@ -191,16 +191,16 @@ int main(int argc, const char * argv[]) {
     	infile >> splitMe;
 	split = splitMe.find(",");
 
-	weights[i] = stod(splitMe.substr(0, split));
-        profits[i] = stod(splitMe.substr(split+1));
+	weights[i] = stoi(splitMe.substr(0, split));
+        profits[i] = stoi(splitMe.substr(split+1));
     }
 
   //bubble sort for sorting because I was told it won't be graded
 	for (int i=0; i < profits.size() - 1; i++){
 		for (int j=0; j< profits.size()-1-i; j++){
 			if (profits[j]/weights[j] < profits[j+1]/weights[j+1]){
-				double  prof_temp = profits[j];
-        double weigh_temp = weights[j];
+				int  prof_temp = profits[j];
+        int weigh_temp = weights[j];
 				profits[j] = profits[j+1];
         weights[j] = weights[j+1];
 				profits[j+1] = prof_temp;
